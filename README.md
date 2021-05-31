@@ -10,6 +10,7 @@ Per avviare il programma bisogna seguire i seguenti step:
   - Anno attuale (in formato YYYY, e.g 2021)
   - Mese di cui generare i turni (in formato M, e.g. 6 indica Giugno)
   - Il pattern dei turni (in formato DayName-NumberOfPerson;DayName-NumberOfPerson, e.g. Wed-2;Sun-3 crea per ogni settimana un turno doppio il mercoledì ed un triplo la domenica)
+
 **N.B. Possono essere generati solamente due tipologie di turni (light and heavy). Momentaneamente, non esiste una definizione di turno medio**
 
 Il file csv si aggiornerà in automatico, contando il numero di turni fatti per ogni Utente e gli eventuali punitivi scontati. Un file txt rappresentante la tabella in LaTex verrà generata, così da consentire la realizzazione istantanea di una tabella utilizzando OverLeaf
