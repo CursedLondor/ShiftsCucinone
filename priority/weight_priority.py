@@ -1,4 +1,13 @@
-def define_weight(user):
+# There are two different methods to define the weight for every person:
+
+import math
+
+
+# First way
+# The weight is computed with the admonition formula.
+# People will be extracted from a shuffled list with all the names
+# Someone could be picked up every month if he is unlucky
+def define_weight_with_admonition(user):
 
     admonitions = int(user.admonitions)
 
@@ -24,15 +33,43 @@ def define_weight(user):
         return amount_of_shifts if amount_of_shifts != 0 else 1
 
 
-def obtain_extraction_list(users):
+def obtain_extraction_list_admonitions(users):
 
     extraction_list = []
 
     for user in users:
-        weight = define_weight(user)
+        weight = define_weight_with_admonition(user)
 
         # Add the user multiple time based on the weights
         for _ in range(int(weight)):
             extraction_list.append(user)
+
+    return extraction_list
+
+
+# Second way
+# A threshold is set up. Person which number of shifts are lesser or higher than threshold will be selected
+def obtain_extraction_list_threshold(users, type_of_sample):
+
+    extraction_list = []
+    total = 0
+
+    # Obtain the number of person that cleaned in the past for every month
+    for user in users:
+        total += int(user.light_shifts) + int(user.heavy_shifts)
+
+    threshold = math.ceil(total/len(users))
+
+    for user in users:
+
+        number_of_shifts = int(user.light_shifts) + int(user.heavy_shifts)
+
+        if type_of_sample == "Low":
+            if number_of_shifts < threshold:
+                extraction_list.append(user)
+
+        else:
+            if number_of_shifts >= threshold:
+                extraction_list.append(user)
 
     return extraction_list

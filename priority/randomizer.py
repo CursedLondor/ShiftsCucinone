@@ -3,5 +3,8 @@ import random
 
 
 def randomize(users):
-    random.shuffle(users)
+
+    for _ in range(random.randint(1, 12)):
+        random.shuffle(users)
+
     return users
