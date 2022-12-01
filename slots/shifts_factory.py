@@ -225,7 +225,7 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
                     temp_usr = ulist_av_adm.pop(0)
                     temp_role = punitive_role
                     index = user_get_index_of(original_users, temp_usr)
-                    user_decr_admonitions(original_users[i])
+                    user_decr_admonitions(original_users[index])
                     admonished_list.remove(temp_usr)
                 # Then pick available high-score-people
                 elif(len(ulist_av_high) > 0):
