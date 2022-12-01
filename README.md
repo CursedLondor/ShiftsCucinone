@@ -13,10 +13,10 @@ Il file csv si aggiornerà in automatico, contando il numero di turni fatti per 
 ## Algoritmo di estrazione utenti (premessa)
 L'algoritmo di estrazione degli utenti utilizza un approccio basato su paradigma Greedy, ovvero è in grado di considerare soltanto soluzioni localmente ottime: l'assegnazione dei turni non sarà sempre ottimale, perchè non esplora tutto lo spazio delle possibili soluzioni.
 
-Esempio: John è disponibile il 5/12/ e il 7/12. Paul è l'unica persona disponibile il 7/12 (turno doppio).
-John viene assegnato il 5/12
-Paul viene assegnato il 7/12
-==> le assegnazioni non sono ottime, John poteva essere assegnato il 7/12
+Esempio: John è disponibile il 5/12/ e il 7/12. Paul è l'unica persona disponibile il 7/12 (turno doppio).  
+John viene assegnato il 5/12  
+Paul viene assegnato il 7/12  
+==> le assegnazioni non sono ottime, John poteva essere assegnato il 7/12  
 
 ## Algoritmo di estrazione utenti
 ```
