@@ -6,9 +6,9 @@ Questo Repository contiene il codice utilizzato per poter generare i turni di pu
 ## Avviare il programma 
 Vedi file Guida.pdf
 
-**N.B. Possono essere generati solamente tre tipologie di turni (light (doppio), heavy (triplo) or hood (cappa))**
+**N.B. Possono essere generati solamente tre tipologie di turni (light (doppio), heavy (triplo) o hood (cappa))**
 
-Il file csv si aggiornerà in automatico, contando il numero di turni fatti per ogni Utente e gli eventuali punitivi scontati (solo nel caso si adotti il calcolo dei turni con ammonizione). Un file txt contenente i turni verrà generato, copiarne il contenuto, incollarlo su Overleaf e generare il PDF.
+Il file csv si aggiornerà in automatico, contando il numero di turni fatti per ogni Utente e gli eventuali punitivi scontati. Un file txt contenente i turni verrà generato, copiarne il contenuto, incollarlo su Overleaf e generare il PDF.
 
 
 ### Logica di estrazione
