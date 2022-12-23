@@ -100,11 +100,14 @@ def read_shifts(year, month, users):
     # Number of people in a light and heavy shifts
     n_people_light = 1000
     n_people_heavy = 0
+    month_str = str(month)
+    if month < 10:
+        month_str = "0" + str(month)
 
     try:
-        txt_file = open('./database/shifts_' + str(month) + '_' + str(year) + '.txt', mode='r', encoding='utf-8')
+        txt_file = open('./database/shifts_' + month_str + '_' + str(year) + '.txt', mode='r', encoding='utf-8')
     except:
-        print(" File \"%s\" does not exists" %('./database/shifts_' + str(month) + '_' + str(year) + '.txt'))
+        print(" File \"%s\" does not exists" %('./database/shifts_' + month_str + '_' + str(year) + '.txt'))
         return shifts, n_people_light, n_people_heavy
     lines = txt_file.readlines()
     for i in range(len(lines)):
