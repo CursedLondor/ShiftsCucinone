@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: file corrente",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            // Year, Month, DayOfWeek-NumberOfPeople, (optional) DayNumber-NumberOfPeople_hood_shift
+            "args": ["2022", "12", "Mon-2;Wed-2;Fri-2;Sun-3", "13-3"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Current File with UserName arg",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["${env:USERNAME}"],
+            "console": "integratedTerminal"
+        }
+    ]
+}
