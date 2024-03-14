@@ -81,54 +81,6 @@ def increment(user, is_light_shift, is_punitive):
         else:
             user.heavy_shifts = int(user.heavy_shifts) + 1
 
-
-""" def update_users(users, shifts, light, heavy):
-    # A list of encountered users during the loop in shifts
-    encountered_users = set()
-
-    # Cycle the users for every shift
-    for shift in shifts:
-
-        # Verify the type of shift (heavy or light)
-        is_light_shift = True
-        if len(shift[1]) == heavy:
-            is_light_shift = False
-
-        for shift_user in shift[1]:
-            # @AT: That's not the optimal way to verify if a shift is punitive:
-            # 1) The user may have only one "punitive" turn in the current month, however it would count as "normal turn"
-            # 2) Lazzari usually keeps admonished users for cleaning the hood of the kitchen
-
-            # It would be better to provide the possibility to add admonitions directly through the file
-
-            # @LM: In case there is at least one element inside the encountered list
-            if encountered_users:
-                ###########################################
-                #### Edit 28.10.2022 - Andrea Torrengo ####
-                ###########################################
-                # Code Optimization
-
-                # If true, this is a punitive shift
-                ret = is_a_punitive_shift(encountered_users, shift_user)
-                for user in users:
-                    if user.name == shift_user.name:
-                        increment(user, is_light_shift, ret)
-                        break
-
-            # In case the list is empty, consider the shift as normal shift
-            else:
-                for user in users:
-                    if user.name == shift_user.name:
-                        # Update the shifts for that user
-                        if is_light_shift:
-                            user.light_shifts = int(user.light_shifts) + 1
-                        else:
-                            user.heavy_shifts = int(user.heavy_shifts) + 1
-                        break
-
-            encountered_users.add(shift_user)
-"""
-
 def get_exception_dates_list():
     exception_dates_list = []
 
@@ -137,12 +89,19 @@ def get_exception_dates_list():
         txtFile.readline()
         content = txtFile.readlines()
         for line in content:
+            # remove space and endlines
             line = line.replace("\n", "")
-            # Check if line is a valid date
-            if is_ddmm_valid(line):
-                exception_dates_list.append(line)
-            else:
-                print(" (!) %s is not a valid date" %line)
+            line = line.replace(" ", "")
+            # zero-fill when needed (ie: March is 03, and not 3)
+            line_pattern = line.split('/')
+            
+            if len(line_pattern) == 2:
+                line = line_pattern[0].zfill(2) + '/' + line_pattern[1].zfill(2)
+                # Check if line is a valid date
+                if is_ddmm_valid(line):
+                    exception_dates_list.append(line)
+                else:
+                    print(" (!) %s is not a valid date" %line)
         txtFile.close()
 
     return exception_dates_list

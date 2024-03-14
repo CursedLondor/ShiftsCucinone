@@ -5,10 +5,13 @@
 # For issues contact musluca.lock@gmail.com
 from collections import UserList
 import sys
+import os
 from console.console_menu import console_menu_handler
 from users.user_management import obtain_users
 
+
 if __name__ == '__main__':
+    #pdfl.create_pdf()
     # Score of a light, heavy and hood shift
     shift_scores = [2, 3, 6]
     USERS_FILE_PATH = "./database/users.csv"

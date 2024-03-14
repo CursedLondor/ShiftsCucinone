@@ -2,19 +2,19 @@
 
 import calendar
 from common.format_date import convert_day, get_current_date_string, get_week_day
-from priority.weight_priority import get_available_people_for_date, split_av_and_na_users, obtain_extraction_list_admonished, obtain_extraction_list_admonitions, obtain_extraction_list_threshold
+from priority.weight_priority import get_available_people_for_date, get_available_users, obtain_extraction_list_admonished, obtain_extraction_list_threshold
 from users.user_management import user_decr_admonitions, user_get_index_of, user_increment_field_value, user_sort_list_by_score
 
 
 
-from jinja2 import Undefined
-from sqlalchemy import null
+#from jinja2 import Undefined
+#from sqlalchemy import null
 
 from users.user_management import get_exception_dates_list
 from users.user_management import write_users
 from priority.randomizer import randomize
 from common.format_date import date_to_print
-from common.shift_utilities import define_heavy_and_light_shifts, get_users_field_index_to_update, write_shifts
+from common.shift_utilities import get_users_field_index_to_update, write_shifts
 from common.shift_utilities import compute_maximum
 
 
@@ -80,10 +80,10 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
     year = int(year)
     month = int(month)
 
-    # Split the days from the number of users, so it could be process in the code
+    # Split the days from the number of users, so it could be processed in the code
     shifts_of_week = shifts_of_week.split(';')
 
-    # Create the calendar starting from Monday (if the current month does not starts with a Monday
+    # Create the calendar starting from Monday (if the current month does not start with a Monday
     # the calendar will contain days from the previous month. The same if the current month does
     # not end with a Sunday
     cal = calendar.Calendar(firstweekday=0)
@@ -110,9 +110,9 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
         # Integer Hood Date
         int_date = year * 10000 + month * 100 + int(pattern[0])
         # Split available users and not available users
-        ulist_av_adm, ulist_na_adm = split_av_and_na_users(admonished_list, int_date)
-        ulist_av_low, ulist_na_low = split_av_and_na_users(low_score_list, int_date)
-        ulist_av_high, ulist_na_high = split_av_and_na_users(high_score_list, int_date)
+        ulist_av_adm  = get_available_users(admonished_list, int_date)
+        ulist_av_low  = get_available_users(low_score_list, int_date)
+        ulist_av_high = get_available_users(high_score_list, int_date)
         # Sort lists by lower scores
         user_sort_list_by_score(ulist_av_adm, shift_scores)
         user_sort_list_by_score(ulist_av_low, shift_scores)
@@ -166,7 +166,9 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
     
 
     for day_tuple in cal.itermonthdays4(int(year), int(month)):
-        ddmm = str(day_tuple[2]) + '/' + str(day_tuple[1])
+        ddmm_month = str(day_tuple[1]).zfill(2)
+        ddmm_day = str(day_tuple[2]).zfill(2)
+        ddmm = ddmm_day + '/' + ddmm_month
         shift_days_of_week = [
             [convert_day(str(key).split('-')[0]), int(str(key.split('-')[1]))] 
             for key in shifts_of_week]
@@ -193,9 +195,9 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
 
             # For each shift date, split available and not available people
             int_date = year * 10000 + month * 100 + int(day_tuple[2])
-            ulist_av_adm, ulist_na_adm = split_av_and_na_users(admonished_list, int_date)
-            ulist_av_low, ulist_na_low = split_av_and_na_users(low_score_list, int_date)
-            ulist_av_high, ulist_na_high = split_av_and_na_users(high_score_list, int_date)
+            ulist_av_adm =  get_available_users(admonished_list, int_date)
+            ulist_av_low =  get_available_users(low_score_list, int_date)
+            ulist_av_high = get_available_users(high_score_list, int_date)
             # Sort lists by lower scores
             user_sort_list_by_score(ulist_av_adm, shift_scores)
             user_sort_list_by_score(ulist_av_low, shift_scores)
@@ -215,12 +217,13 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
                 # Worst case scenario: not enough people for that shift date
 
 
+                
                 # First pick available low-score-people
                 if(len(ulist_av_low) > 0):
                     temp_usr = ulist_av_low.pop(0)
                     temp_role = regular_role
                     low_score_list.remove(temp_usr)
-                # Then pick available admonished people
+				# Then pick available admonished people
                 elif(len(ulist_av_adm) > 0):
                     temp_usr = ulist_av_adm.pop(0)
                     temp_role = punitive_role

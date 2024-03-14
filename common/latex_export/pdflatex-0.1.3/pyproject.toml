@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "pdflatex"
+version = "0.1.3"
+description = "Simple wrapper to calling pdflatex"
+authors = ["mbello <mbello@users.noreply.github.com>"]
+license = "CC0"
+readme = "README.md"
+repository = "https://github.com/mbello/pdflatex"
+homepage = "https://github.com/mbello/pdflatex"
+keywords = ['pdflatex', 'pypdflatex', 'latex to pdf using python']
+
+[tool.poetry.dependencies]
+python = "^3.6"
+attrs = "^18.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

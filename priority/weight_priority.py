@@ -1,53 +1,6 @@
 # There are two different methods to define the weight for every person:
 
-import math
-
 from users.user_management import user_get_score, user_get_threshold
-
-
-# First way
-# The weight is computed with the admonition formula.
-# People will be extracted from a shuffled list with all the names
-# Someone could be picked up every month if he is unlucky
-def define_weight_with_admonition(user):
-
-    admonitions = int(user.admonitions)
-
-    if admonitions == 0 or admonitions == 1:
-        return 1
-    else:
-        # Scale the admonitions to apply the formulas
-        punitive = int(user.admonitions) - 2
-
-        multiplier = int(punitive / 3) + 1
-        position = punitive % 3 + 1
-
-        # Default value is one because at least one element should be inside the priority queue
-        amount_of_shifts = 1
-
-        while multiplier != 0:
-            amount_of_shifts = amount_of_shifts + (multiplier * position)
-            multiplier -= 1
-            position = 3
-
-        amount_of_shifts = amount_of_shifts - int(user.heavy_punitive_shifts) - int(user.light_punitive_shifts)
-
-        return amount_of_shifts if amount_of_shifts != 0 else 1
-
-
-def obtain_extraction_list_admonitions(users):
-
-    extraction_list = []
-
-    for user in users:
-        weight = define_weight_with_admonition(user)
-
-        # Add the user multiple time based on the weights
-        for _ in range(int(weight)):
-            extraction_list.append(user)
-
-    return extraction_list
-
 
 # Second way
 # A threshold is set up. Person which number of shifts are lesser or higher than threshold will be selected
@@ -97,14 +50,16 @@ def get_available_people_for_date(users, integerdate):
     return user_list
 
 # Puts available users inside a_list and not available users in na_list
-def split_av_and_na_users(users, integerdate):
+def get_available_users(users, integerdate):
     a_list = []
-    na_list = []
+    #na_list = []
     i = 0
     bottom = len(users) - 1
-    while i < len(users) and i < bottom:
+    while i < len(users) and i <= bottom:
         # If user i is not available on <integerdate>
-        if integerdate in users[i].availability:
+        if integerdate not in users[i].availability:
+            a_list.append(users[i])
+        #else:
             # Puts him at the bottom of the list
             #aux = users[i]
             #users[i] = users[bottom]
@@ -113,8 +68,7 @@ def split_av_and_na_users(users, integerdate):
             #i -= 1
             ## For sure, user at position <bottom> must not be analysed anymore
             #bottom -= 1
-            na_list.append(users[i])
-        else:
-            a_list.append(users[i])
+            #na_list.append(users[i])
+            
         i += 1
-    return a_list, na_list
+    return a_list #, na_list

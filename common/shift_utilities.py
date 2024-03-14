@@ -1,19 +1,9 @@
 from collections import UserList
-from common.format_date import convert_day, date_to_print, date_to_print_ita, convert_month_num_ita
+from common.format_date import convert_day, date_to_print, monthint_to_string, date_to_print_ita, convert_month_num_ita
 from users.user_management import user_find_by_name
 
 
-def define_heavy_and_light_shifts(pattern):
-    # Compute the number of users for light and heavy shift
-    persons_in_turn = []
-
-    pattern = [pat.split('-') for pat in pattern.split(';')]
-    for element in pattern:
-        persons_in_turn.append(int(element[1]))
-
-    return min(persons_in_turn), max(persons_in_turn)
-
-
+# Finds the maximum number of people needed for a shift
 def compute_maximum(shifts_of_week):
     # Define max amount of users
     max_amount_users = 0
@@ -30,7 +20,7 @@ def compute_maximum(shifts_of_week):
 
     return max_amount_users
 
-
+# Exports shifts into .txt and .latex files
 def write_shifts(year, month, max_num_person, shifts):
     latex_start_string = ""
     latex_end_string = ""
@@ -53,9 +43,9 @@ def write_shifts(year, month, max_num_person, shifts):
         print("\n (!) Could not find header and footer for latex file")
 
     # Write .txt file
-    with open('./database/shifts_' + str(month) + '_' + str(year) + '.txt', mode='w', encoding='utf-8') as txt_file:
+    with open('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '.txt', mode='w', encoding='utf-8') as txt_file:
         # Write Latex file
-        with open('./database/shifts_' + str(month) + '_' + str(year) + '_latex.txt', mode='w', encoding='utf-8') as latex_table:
+        with open('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '_latex.txt', mode='w', encoding='utf-8') as latex_table:
             # Write "header" into latex file
             latex_table.write(latex_start_string)
             for shift in shifts:
@@ -90,7 +80,7 @@ def write_shifts(year, month, max_num_person, shifts):
             latex_table.write(latex_end_string)
             latex_table.close()
         txt_file.close()
-    print("\n >> File \"%s\" saved successfully" %('./database/shifts_' + str(month) + '_' + str(year) + '.txt'))
+    print("\n >> File \"%s\" saved successfully" %('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '.txt'))
 
 
 # Returns shifts list and hood shift
@@ -100,14 +90,11 @@ def read_shifts(year, month, users):
     # Number of people in a light and heavy shifts
     n_people_light = 1000
     n_people_heavy = 0
-    month_str = str(month)
-    if month < 10:
-        month_str = "0" + str(month)
 
     try:
-        txt_file = open('./database/shifts_' + month_str + '_' + str(year) + '.txt', mode='r', encoding='utf-8')
+        txt_file = open('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '.txt', mode='r', encoding='utf-8')
     except:
-        print(" File \"%s\" does not exists" %('./database/shifts_' + month_str + '_' + str(year) + '.txt'))
+        print(" File \"%s\" does not exists" %('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '.txt'))
         return shifts, n_people_light, n_people_heavy
     lines = txt_file.readlines()
     for i in range(len(lines)):
@@ -143,6 +130,7 @@ def read_shifts(year, month, users):
     
     return shifts, n_people_light, n_people_heavy
 
+# Given a date tuple, return index of the shift list
 def shift_get_index_of(shifts, date_tuple):
     hood_date = False
     found = -1
@@ -151,6 +139,7 @@ def shift_get_index_of(shifts, date_tuple):
     if date_tuple[0] == shifts[j][0][0] and date_tuple[1] == shifts[j][0][1] and date_tuple[2] == shifts[j][0][2]:
         hood_date = True
 
+    # Finds the index of the requested shift (light/heavy/hood)
     for i in range(len(shifts) - 1):
         if date_tuple[0] == shifts[i][0][0] and date_tuple[1] == shifts[i][0][1] and date_tuple[2] == shifts[i][0][2]:
             found = i
@@ -177,6 +166,7 @@ def shift_get_index_of(shifts, date_tuple):
     
     return found
 
+# Return the index of the field of the user to update
 def get_users_field_index_to_update(user_role, shift_type):
     start_index = 2
     type_contribute = 0

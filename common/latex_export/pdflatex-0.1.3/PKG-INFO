@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: pdflatex
+Version: 0.1.3
+Summary: Simple wrapper to calling pdflatex
+Home-page: https://github.com/mbello/pdflatex
+Author: mbello
+Author-email: mbello@users.noreply.github.com
+Keywords: pdflatex,pypdflatex,latex to pdf using python
+Requires-Python: >=3.6,<4.0
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Dist: attrs (>=18.2,<19.0)
+Project-URL: Repository, https://github.com/mbello/pdflatex

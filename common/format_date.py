@@ -172,3 +172,8 @@ def dateint_to_string(date_int):
 
 def get_current_date_string():
     return datetime.datetime.today().strftime("%Y-%m-%d_%H-%M-%S")
+
+def monthint_to_string(month_int):
+    if int(month_int) < 10:
+        return "0" + str(month_int)
+    return str(month_int)
