@@ -1,6 +1,7 @@
 \documentclass[a4paper, landscape]{article}
 \usepackage{helvet}
 \usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
 \usepackage[a4paper,
 bindingoffset=0.2in,
 left=1in,
@@ -8,18 +9,22 @@ right=1in,
 top=0in,
 bottom=1in,
 footskip=.25in]{geometry}
-\newgeometry{left=0.0in,right=0.0in,top=1in,bottom=1in}
-\title{\Huge\textbf{Turni di pulizia}} %month has been added dinamically while generating the latex file
-\author{}
-\date{Aggiornati il \today}
+\AtBeginDocument{\AtBeginShipoutNext{\AtBeginShipoutDiscard}}
+\newgeometry{left=0in,right=0in,top=1in,bottom=0in}
+
 
 \begin{document}
-\setlength{\voffset}{-1in}
+\setlength{\voffset}{-0.5in}
 \fontfamily{phv}\selectfont
 \pagenumbering{gobble}
-\maketitle
+
 \begin{center}
-\large
-{\renewcommand{\arraystretch}{1.5}
-\begin{tabular}{|l@{\hspace{2em}}|l@{\hspace{9em}}|l@{\hspace{9em}}|l@{\hspace{9em}}|}
+
+\fontsize{32}{30}\selectfont
+\textbf{Turni di pulizia}
+
+\fontsize{11}{14}\selectfont
+
+\renewcommand{\arraystretch}{1.5}
+\begin{tabular}{|l@{\hspace{2em}}|l@{\hspace{10em}}|l@{\hspace{10em}}|l@{\hspace{10em}}|}
 \hline

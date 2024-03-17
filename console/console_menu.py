@@ -5,7 +5,7 @@ from ast import While
 from common.format_date import (dateint_to_string, datestring_to_int, get_date_list_by_dow,
                                 get_date_list_by_range,
                                 get_end_of_academic_year, is_datestring_valid,
-                                is_day_of_week_string)
+                                is_day_of_week_string, date_to_print_ita)
 from common.shift_utilities import (get_users_field_index_to_update,
                                     read_shifts, shift_get_index_of,
                                     write_shifts)
@@ -16,7 +16,8 @@ from users.user_management import (obtain_users, user_add, user_data_delete,
                                    user_find_by_name, user_get_index_of, user_get_score, user_get_threshold,
                                    user_incr_admonitions,
                                    user_increment_field_value, user_remove, user_sort_list_by_score,
-                                   users_find_by_substring, write_users)
+                                   users_find_by_substring, write_users, new_dummy_user,
+                                   get_first_dummy_user_index_in_list)
 
 
 def console_menu_print():
@@ -39,19 +40,22 @@ def console_menu_print():
 def user_menu_print():
     choice = -1
     print(" " + "-" * 40)
-    print(" [1] : Admonite user")
-    print(" [2] : Show user")
-    print(" [3] : Show users scores")
-    print(" [4] : Edit user availability")
-    print(" [5] : Swap users shifts")
-    print(" [6] : Add new user")
-    print(" [7] : Remove existing user")
-    print(" [8] : Delete all users data")
-    print(" [9] : Debug only")
     print(" [0] : Back")
+    print(" [1] : Admonite user")
+    print(" [2] : Show user data")
+    print(" [3] : Show users scores")
+    print(" [4] : Show admonished users")
+    print(" [5] : Edit user availability")
+    print(" [6] : Swap users shifts")
+    print(" [7] : Insert user to an incomplete shift group")
+    print(" [8] : Add new user")
+    print(" [9] : Remove existing user")
+    print(" [10]: Add bonus points (ie: 2 people doing a triple-shift)")
+    print("")
+    print(" [1739] : Delete all users data")
     print(" " + "-" * 40)
     
-    while choice < 0 or choice > 9:
+    while choice < 0 or choice > 1739:
         try:
             choice = int(input(" Choice: "))
         except:
@@ -63,6 +67,7 @@ def console_menu_wait():
 
 
 def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
+    max_username_length = 20
     
     choice_main_menu = 1
     while choice_main_menu > 0 and choice_main_menu <= 2:
@@ -85,7 +90,7 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
             print(" | IMPORTANT! IF YOU ARE NOT SATISFIED with the resulting shifts,                    |")
             print(" | and want to RE-GENERATE shifts, you MUST:                                         |")
             print(" | 1) close this program                                                             |")
-            print(" | 2) go inside \"/database\" folder and move \"users.csv\" to another location          |")
+            print(" | 2) go inside \"/database\" folder and delete \"users.csv\"                            |")
             print(" | 3) go inside \"/database/backup\" folder                                            |")
             print(" | 4) find the most recent backup file \"users_backup_yyyy-mm-dd_HH-MM-SS.csv\"        |")
             print(" | 5) move it to \"/database\" folder                                                  |")
@@ -99,8 +104,9 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
             year = input(" Insert year: ")
             month = input(" Insert month: ")
             while valid == False:
-                shift_of_week = input(" Insert <dayname-Npeople> followed by \";\" (ie: mon-2;wed-2;fri-2;sun-3): ")
+                shift_of_week = input(" Insert <dayname-Npeople> followed by \";\" (ie:   mon-2;wed-2;fri-3;sun-3  ): ")
                 # check if inserted days of week are correct
+                shift_of_week = shift_of_week.lstrip().rstrip()
                 days_to_check = shift_of_week.split(";")
                 if len(days_to_check) > 0:
                     days_to_check = [day.split("-")[0] for day in days_to_check]
@@ -138,12 +144,12 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
                         print("\n (!) Invalid format")
 
             calculate_shift(year, month, shift_of_week, hood_shift_string, users, USERS_FILE_PATH, shift_scores)
-            print("\n >> Shift generated in \"./database/shifts_" + month + "_" + year + ".txt\"")
+            
         elif choice_main_menu == 2:
             choice_user_menu = 1
             # Users management #
             ####################
-            while choice_user_menu > 0 and choice_user_menu <= 7:
+            while choice_user_menu > 0 and choice_user_menu <= 1739:
                 choice_user_menu = user_menu_print()
                 selected_users = []
                 approved = False
@@ -162,49 +168,109 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
                     console_show_users(users, shift_scores)
                 elif choice_user_menu == 3:
                     # Show users scores
-                    max_str_length = 20
                     users_copy = users.copy()
                     user_sort_list_by_score(users_copy, shift_scores)
                     print("\n Users ordered by current scores:")
                     print(" --------------------------------")
                     for u in users_copy:
-                        u_print = u.name
-                        if len(u_print) > max_str_length:
-                            u_print = u_print[:max_str_length - 3]
-                            u_print = str(u_print) + "..."
-                        else:
-                            u_print = u_print.ljust(max_str_length, ' ')
+                        u_print = stringPadding(u.name, max_username_length)
                         print(" | %s | %d" %(u_print, user_get_score(u, shift_scores)))
                     print("\n Current threshold score: %d" %user_get_threshold(users, shift_scores))
                 elif choice_user_menu == 4:
+                    print("\n\n Admonished people list")
+                    #tmp_user_list = obtain_extraction_list_threshold(users, "Low", shift_scores)
+                    tmp_user_list = obtain_extraction_list_admonished(users)
+                    print('-' * 77)
+                    print('| Name\t\t\t | Pending admonitions  | Total admonitions | Score |')
+                    print('-' * 77)
+                    for user in tmp_user_list:
+                        print('|', stringPadding(user.name, max_username_length), '  |\t\t  ', user.remaining_admonitions, '\t|\t\t', user.admonitions, ' |\t', user_get_score(user, shift_scores), ' |')
+                    
+                    # for u in users:
+                    #     print(u.name)
+                    # print("-- sorted --")
+                    # user_sort_list_by_score(users, shift_scores)
+                    # for u in users:
+                    #     print(u.name)
+                elif choice_user_menu == 5:
                     # Edit user availability
                     console_edit_user_availability(users, USERS_FILE_PATH)
-                elif choice_user_menu == 5:
-                    # Swap users shifts
-                    shifts = []
-                    # Specify the shifts to be modified
-                    print(" | Specify the shift file to edit |")
-                    valid = False
-                    while valid == False:
-                        try:
-                            year = int(input(" Insert year: "))
-                            month = int(input(" Insert month: "))
-                            valid = True
-                        except:
-                            print(" (!) Please, insert a numeric value")
-                            valid = False
-                    shifts, num_people_light_shift, num_people_heavy_shift = read_shifts(year, month, users)
-                    
-                    if shifts is None:
-                        print("\n (!) You were probably trying to edit an old shift file. That is not possible if you do not have every user registered in \"users.csv\" file")
-                    elif len(shifts) == 0:
-                        print(" File not Found: Operation aborted")
-                    else:
-                        console_swap_users(users, shifts, month, year, num_people_light_shift, num_people_heavy_shift, USERS_FILE_PATH)
                 elif choice_user_menu == 6:
+                    # Read shifts
+                    shifts = []
+                    shifts, num_people_light_shift, num_people_heavy_shift, year, month = console_open_shifts_file(users)
+                    # Swap users shifts
+                    if console_check_shifts_file(shifts):
+                        console_swap_users(users, shifts, month, year, num_people_light_shift, num_people_heavy_shift, USERS_FILE_PATH)
+                elif choice_user_menu == 7:
+                    # Read shifts
+                    incomplete_shifts = []
+                    dummy_user = new_dummy_user()
+                    shifts = []
+                    shifts, num_people_light_shift, num_people_heavy_shift, year, month = console_open_shifts_file(users)
+                    
+                    for s in shifts:
+                        if get_first_dummy_user_index_in_list(s[1]) >= 0:
+                            incomplete_shifts.append(s)
+                    
+                    if len(incomplete_shifts) > 0:
+                        shift1_display_index = 1
+                        # List all shifts where at least one person is missing
+                        print('\n Choose one of the following incomplete shifts:')
+                        for s in incomplete_shifts:
+                            inc_usernames_list = []
+                            for u in s[1]:
+                                inc_usernames_list.append(u.name)
+                            print(' [' + str(shift1_display_index) + ']   ', date_to_print_ita(s[0]) + ': ', ', '.join(inc_usernames_list))
+                            shift1_display_index += 1
+                        # Select one of this shift
+                        shift1_display_index = 0
+                        while shift1_display_index < 1 or shift1_display_index > len(incomplete_shifts):
+                            try:
+                                shift1_display_index = int(input('\n Choice number: '))
+                                if shift1_display_index < 1 or shift1_display_index > len(incomplete_shifts):
+                                    print('\n (!) Choice must be a number between', 1, 'and', len(incomplete_shifts))
+                            except:
+                                print('\n Please, insert an integer number')
+                        shift1_display_index -= 1
+                        # Find the index of the incomplete shift, on the general shifts list, by datetuple
+                        shift1_index = shift_get_index_of(shifts, incomplete_shifts[shift1_display_index][0])
+                        # Select the user to add
+                        user2_list_index = -1
+                        while user2_list_index == -1:
+                            username = input(" Insert the name (or substring) of the replacement user: ")
+                            temp_user = console_single_user_select(users, username)
+                            if temp_user != None:
+                                user2_list_index = user_get_index_of(users, temp_user)
+                        
+                        punitive = 'p'
+                        regular = 'r'
+                        user1_index = get_first_dummy_user_index_in_list(incomplete_shifts[shift1_display_index][1])
+                        # If user2 has at least one admonition to discount, mark role as "punitive" and decrease user2 admonitions
+                        # Otherwise, mark role as "regular"
+                        if users[user2_list_index].remaining_admonitions > 0:
+                            shifts[shift1_index][2]
+                            users[user2_list_index].remaining_admonitions -= 1
+                            user2_field_index = get_users_field_index_to_update(punitive, shifts[shift1_index][3])
+                        else:
+                            shifts[shift1_index][2].insert(user1_index, regular)
+                            user2_field_index = get_users_field_index_to_update(regular, shifts[shift1_index][3])
+                        # Increment user2 field value (depending of user2 has admonition to discount, the field will be regular or punitive)
+                        user_increment_field_value(users, user2_list_index, user2_field_index, +1)
+
+                        # Replace user1 to user2
+                        shifts[shift1_index][1][user1_index] = users[user2_list_index]
+
+                        # Save users file
+                        write_users(USERS_FILE_PATH, users)
+                        # Save shifts file
+                        write_shifts(year, month, max(num_people_light_shift, num_people_heavy_shift, console_get_number_of_people_on_hood_shift(shifts)), shifts)
+                    else:
+                        print('\n (i) There are no incomplete shifts for this month')
+                elif choice_user_menu == 8:
                     # Add new user
                     console_input_user(users, USERS_FILE_PATH)
-                elif choice_user_menu == 7:
+                elif choice_user_menu == 9:
                     # Remove existing user
                     selected_users, approved = console_multiple_users_select(users, "permanently remove")
 
@@ -217,8 +283,20 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
                             else:
                                 print(" (i) User \"%s\" has already been removed (operation skipped)" %(user.name))
                         write_users(USERS_FILE_PATH, users)
-
-                elif choice_user_menu == 8:
+                elif choice_user_menu == 10:
+                    selected_users, approved = console_multiple_users_select(users, "give a bonus reward of " + str(shift_scores[0]) + " points to")
+                    if approved is True:
+                        for user in selected_users:
+                            i = user_get_index_of(users, user)
+                            if i != -1:
+                                old_score = user_get_score(users[i], shift_scores)
+                                user_increment_field_value(users, i, 2, +1)
+                                new_score = user_get_score(users[i], shift_scores)
+                                print(" >> User \"%s\" score was %d. Now it's %d" %(user.name, old_score, new_score))
+                            else:
+                                print(" (i) User \"%s\" has already been removed (operation skipped)" %(user.name))
+                        write_users(USERS_FILE_PATH, users)
+                elif choice_user_menu == 1739:
                     # Delete users' data
                     print("\n")
                     print(" ###################################################################################")
@@ -233,25 +311,24 @@ def console_menu_handler(users, USERS_FILE_PATH, shift_scores):
                         user_data_delete(users, USERS_FILE_PATH)
                     else:
                         print("\n (operation aborted)")
-                elif choice_user_menu == 9:
-                    print("\n\n Debug Only -- Admonished people score list")
-                    #tmp_user_list = obtain_extraction_list_threshold(users, "Low", shift_scores)
-                    tmp_user_list = obtain_extraction_list_admonished(users)
-                    for user in tmp_user_list:
-                        print(user.name, user_get_score(user, shift_scores))
-                    
-                    # for u in users:
-                    #     print(u.name)
-                    # print("-- sorted --")
-                    # user_sort_list_by_score(users, shift_scores)
-                    # for u in users:
-                    #     print(u.name)
 
                 if choice_user_menu != 0 and choice_user_menu != 2:
                     console_menu_wait()
         if choice_main_menu != 0 and choice_main_menu != 2:
             console_menu_wait()
 
+
+# Given a string, return it with the specified fixed_length
+# If greater than fixed_length, then truncate the name and add three dots ...
+# If lower, then fill the gaps with blank spaces
+def stringPadding(string, fixed_length):
+    u_print = string
+    if len(u_print) > fixed_length:
+        u_print = u_print[:fixed_length - 3]
+        u_print = str(u_print) + "..."
+    else:
+        u_print = u_print.ljust(fixed_length, ' ')
+    return u_print
 
 # Returns a list of selected users and a boolean flag to approve/cancel the next operation
 # Output_string is just a string that will be shown inside the console confirmation dialog
@@ -419,12 +496,19 @@ def console_show_users(users, shift_scores):
                 print(" | Number of hood punitive shifts:  %s" %(ret.hood_punitive_shifts))
                 print(" | Number of admonitions:           %s" %(ret.admonitions))
                 print(" | Number of remaining admonitions: %s" %(ret.remaining_admonitions))
-                string_array = [str(key % 100) + "/" + str(int((key % 10000)/100)) + "/" + str(int(key/10000)) for key in ret.availability]
+                string_array = [str(key % 100).zfill(2) + "/" + str(int((key % 10000)/100)).zfill(2) + "/" + str(int(key/10000)) for key in ret.availability]
                 print(" | Not availability dates: %s" %(string_array))
                 print(" | Forbidden links: %s" %(ret.forbidden_links))
                 print(" | User's score: %d" %(user_get_score(ret, shift_scores)))
                 print(" | Threshold (same for every user): %d" %(user_get_threshold(users, shift_scores)))
 
+def console_get_number_of_people_on_hood_shift(shifts):
+    if shifts[len(shifts) - 1][3] == 'hood':
+        num_people_hood = len(shifts[len(shifts) - 1][1])
+    else:
+        num_people_hood = 0
+    return num_people_hood
+    
 # Swap users' shifts
 def console_swap_users(users, shifts, month, year, num_people_light, num_people_heavy, USERS_FILE_PATH):
     punitive = 'p'
@@ -432,10 +516,7 @@ def console_swap_users(users, shifts, month, year, num_people_light, num_people_
     choice = -1
     shift1_index = user1_index = shift2_index = user2_index = -1
 
-    if shifts[len(shifts) - 1][3] == 'hood':
-        num_people_hood = len(shifts[len(shifts) - 1][1])
-    else:
-        num_people_hood = 0
+    num_people_hood = console_get_number_of_people_on_hood_shift(shifts)
     
     # First choose the user to swap
     while shift1_index == -1 or user1_index == -1:
@@ -671,3 +752,33 @@ def console_select_dates(output_string):
                     print(" (!) Invalid format")
     
     return availability_array
+
+# Open a prompt where you can insert year and month, then return the tuple (shift_file, num_people_light, num_people_heavy, num_people_hood)
+def console_open_shifts_file(users):
+    # Specify the shifts to be modified
+    year = 0
+    month = 0
+    print(" | Specify the shift file to edit |")
+    valid = False
+    while valid == False:
+        try:
+            year = int(input(" Insert year: "))
+            month = int(input(" Insert month: "))
+            valid = True
+        except:
+            print(" (!) Please, insert a numeric value")
+            valid = False
+    shifts, n_people_light, n_people_heavy = read_shifts(year, month, users)
+    return shifts, n_people_light, n_people_heavy, year, month
+
+# Check if shift file is None or empty
+def console_check_shifts_file(shifts):
+    valid = True
+    if shifts is None:
+        print("\n (!) You were probably trying to edit an old shift file. That is not possible if you do not have every user registered in \"users.csv\" file")
+        valid = False
+    elif len(shifts) == 0:
+        print(" File not Found: Operation aborted")
+        valid = False
+    return valid
+    

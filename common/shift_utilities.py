@@ -1,6 +1,6 @@
 from collections import UserList
 from common.format_date import convert_day, date_to_print, monthint_to_string, date_to_print_ita, convert_month_num_ita
-from users.user_management import user_find_by_name
+from users.user_management import user_find_by_name, new_dummy_user, is_dummy_user_name
 
 
 # Finds the maximum number of people needed for a shift
@@ -81,7 +81,7 @@ def write_shifts(year, month, max_num_person, shifts):
             latex_table.close()
         txt_file.close()
     print("\n >> File \"%s\" saved successfully" %('./database/shifts_' + str(year) + '_' + monthint_to_string(month) + '.txt'))
-
+    print("\n Just go to 'https://texviewer.herokuapp.com/' put the content of (...)latex.txt file and generate the PDF file !")
 
 # Returns shifts list and hood shift
 # shifts = [[day_tuple][users_list]]
@@ -116,8 +116,13 @@ def read_shifts(year, month, users):
             for name in user_names:
                 usr = user_find_by_name(users, name)
                 if usr is None:
-                    print(" [Critical Error](!) Couldn't find user \"%s\" inside \"users.csv\"." %name)
-                    return None, None, n_people_light, n_people_heavy
+                    # If it is not the dummy user, just throw error
+                    if not is_dummy_user_name(name):
+                        print(" [Critical Error](!) Couldn't find user \"%s\" inside \"users.csv\"." %name)
+                        return None, None, n_people_light, n_people_heavy
+                    else:
+                        # create a new dummy_user instance, then append to users_list
+                        users_list.append(new_dummy_user())
                 else:
                     users_list.append(usr)
             if len(users_list) > n_people_heavy:

@@ -3,8 +3,7 @@
 import calendar
 from common.format_date import convert_day, get_current_date_string, get_week_day
 from priority.weight_priority import get_available_people_for_date, get_available_users, obtain_extraction_list_admonished, obtain_extraction_list_threshold
-from users.user_management import user_decr_admonitions, user_get_index_of, user_increment_field_value, user_sort_list_by_score
-
+from users.user_management import user_decr_admonitions, user_get_index_of, user_increment_field_value, user_sort_list_by_score, new_dummy_user
 
 
 #from jinja2 import Undefined
@@ -66,6 +65,7 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
     regular_role = 'r'
     punitive_role = 'p'
     backup_file_path = './database/backup/users_backup_' + str(get_current_date_string()) + '.csv'
+    dummy_user = new_dummy_user()
 
     # Most important thing: backup users.csv
     print(" Backing up users...")
@@ -133,10 +133,6 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
                 admonished_list.remove(temp_usr)
                 # indicates that the user is doing a PUNITIVE shift
                 temp_role = punitive_role
-                # Decrease number of remaining admonitions
-                index = user_get_index_of(original_users, temp_usr)
-                user_decr_admonitions(original_users[index])
-
             # Then pick available low-score-people
             elif(len(ulist_av_low) > 0):
                 temp_usr = ulist_av_low.pop(0)
@@ -152,14 +148,21 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
             else:
                 i = hood_num_people
             
-            # If a user has been added, calculate score
-            if temp_usr != None:
+            # If a user has been selected and it doesn't exists in this shift yet, add it on chosen_users, and calculate score
+            if temp_usr != None and temp_usr not in chosen_users:
+                user_index = user_get_index_of(original_users, temp_usr)
+                # If user is admonite, decrease number of remaining admonitions
+                if temp_role == punitive_role:
+                    user_decr_admonitions(original_users[user_index])
+                
                 chosen_users.append(temp_usr)
                 user_role.append(temp_role)
-                user_index = user_get_index_of(original_users, temp_usr)
                 field_index = get_users_field_index_to_update(temp_role, 'hood')
                 user_increment_field_value(original_users, user_index, field_index, 1)
 
+        # If there are missing people in shift, just append dummy users that have property 'name'='<empty>'
+        while len(chosen_users) < hood_num_people:
+            chosen_users.append(dummy_user)
         # date of the shift; user_list; user_role; shift_type (hood/light/heavy)
         hood_shift = [hood_date_tuple, chosen_users, user_role, 'hood']
     ######################################################
@@ -183,8 +186,6 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
             num_users = (shift_days_of_week[index])[1]
             chosen_users = []
             user_role = []
-            temp_usr = None
-            temp_role = regular_role
             i = 0
 
             shift_type = ""
@@ -193,6 +194,24 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
             else:
                 shift_type = 'light'
 
+            # For each shift date, re-calculate the three lists. In this way, people can be extracted
+            # multiple times in a month (if needed). That's allows to have less incomplete shifts, where
+            # some people are missing, because every available user has already been extracted in the current month
+            # Furthermore, repopulating lists means that the users scores are considered for every shift date
+            
+            # This may not be the most optimized way, but it does the job...
+            
+            # Obtain the list of users who have at least one admonition to discount
+            admonished_list = obtain_extraction_list_admonished(original_users)
+            randomize(admonished_list)
+            # Obtain the list of low-score users (after randomize, sort users by lowest Low scores)
+            low_score_list = obtain_extraction_list_threshold(original_users, "Low", shift_scores)
+            randomize(low_score_list)
+            # Obtain the list of high-score users (after randomize, sort users by lowest High scores)
+            high_score_list = obtain_extraction_list_threshold(original_users, "High", shift_scores)
+            randomize(high_score_list)
+            
+            
             # For each shift date, split available and not available people
             int_date = year * 10000 + month * 100 + int(day_tuple[2])
             ulist_av_adm =  get_available_users(admonished_list, int_date)
@@ -204,6 +223,8 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
             user_sort_list_by_score(ulist_av_high, shift_scores)
 
             while i < int(num_users):
+                temp_role = regular_role
+                temp_usr = None
                 i += 1
 
                 # Considering a shift date:
@@ -218,18 +239,18 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
 
 
                 
-                # First pick available low-score-people
-                if(len(ulist_av_low) > 0):
-                    temp_usr = ulist_av_low.pop(0)
-                    temp_role = regular_role
-                    low_score_list.remove(temp_usr)
-				# Then pick available admonished people
-                elif(len(ulist_av_adm) > 0):
+				# First pick available admonished people
+                if(len(ulist_av_adm) > 0):
                     temp_usr = ulist_av_adm.pop(0)
                     temp_role = punitive_role
                     index = user_get_index_of(original_users, temp_usr)
                     user_decr_admonitions(original_users[index])
                     admonished_list.remove(temp_usr)
+                # First pick available low-score-people
+                elif(len(ulist_av_low) > 0):
+                    temp_usr = ulist_av_low.pop(0)
+                    temp_role = regular_role
+                    low_score_list.remove(temp_usr)
                 # Then pick available high-score-people
                 elif(len(ulist_av_high) > 0):
                     temp_usr = ulist_av_high.pop(0)
@@ -257,8 +278,9 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
                     i = max_num_people + 1
                     print("\n (!) Not enough people for shift of %s" %ddmm)
             
-            
-                if i != max_num_people + 1:
+                # If a user has been selected and it doesn't exists in this shift yet, add it on chosen_users, and calculate score
+                #if i != max_num_people + 1:
+                if temp_usr != None and temp_usr not in chosen_users:
                     chosen_users.append(temp_usr)
                     user_role.append(temp_role)
 
@@ -267,6 +289,9 @@ def create_shifts_threshold(year, month, shifts_of_week, original_users, excepti
                     field_index = get_users_field_index_to_update(temp_role, shift_type)
                     user_increment_field_value(original_users, temp_usr_index, field_index, 1)
 
+            # If there are missing people in this shift, just append dummy users that have property 'name'='<empty>'
+            while len(chosen_users) < int(num_users):
+                chosen_users.append(dummy_user)
             # Populate the shifts
             shifts.append([day_tuple, chosen_users, user_role, shift_type])
 

@@ -5,6 +5,19 @@ from common.format_date import is_datestring_valid, is_ddmm_valid
 
 from users.user import User
 
+def new_dummy_user():
+    return User('--da nominare--', 0, 0, 0, 0, 0, 0, 0, 0, 0, None, None)
+
+def is_dummy_user(user):
+    return user.name == '--da nominare--'
+def is_dummy_user_name(username):
+    return username == '--da nominare--'
+
+def get_first_dummy_user_index_in_list(users_list):
+    for i in range(len(users_list)):
+        if is_dummy_user(users_list[i]):
+            return i
+    return -1
 
 def obtain_users(file_name):
     # Open the file that will contain the users
@@ -56,7 +69,7 @@ def write_users(file_name, users):
                 user.forbidden_links])
     
     users_file.close()
-    print("\n >> File \"%s\" saved successfully" %(file_name))
+    print("\n --> File \"%s\" saved successfully" %(file_name))
 
 
 def is_a_punitive_shift(encountered_users, user):
@@ -222,3 +235,4 @@ def user_increment_field_value(users_list, index_list, index_field, increment):
         users_list[index_list].remaining_admonitions += increment
     else:
         print(" (!) Couldn't increment any field with index %d" %(index_field))
+

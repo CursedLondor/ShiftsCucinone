@@ -41,6 +41,11 @@ def convert_num_ita(num):
     return day_map[num]
 # Only called for print on latex file
 def convert_month_num_ita(num):
+    try:
+        num = int(num)
+    except:
+        num = 0
+        print('\n (!) Cannot parse', num, 'to integer!')
     day_map = {
         0: "???",
         1: "Gennaio",
@@ -92,7 +97,7 @@ def date_to_print(date):
     final_date = []
 
     for element in range(3):
-        final_date.append(str(date[element]))
+        final_date.append(str(date[element]).zfill(2))
 
     final_date.reverse()
     final_date = '/'.join(final_date)
@@ -103,8 +108,8 @@ def date_to_print(date):
 # Accepts a yyyy/mm/dd Dayname string
 def date_to_print_ita(date):
     final_date = []
-    final_date.append(str(date[2]))
-    final_date.append(str(date[1]))
+    final_date.append(str(date[2]).zfill(2))
+    final_date.append(str(date[1]).zfill(2))
 
     final_date = '/'.join(final_date)
     final_date = convert_num_ita(date[3]) + ' ' + final_date
@@ -175,5 +180,5 @@ def get_current_date_string():
 
 def monthint_to_string(month_int):
     if int(month_int) < 10:
-        return "0" + str(month_int)
+        return "0" + str(int(month_int))
     return str(month_int)
