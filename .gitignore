@@ -132,5 +132,9 @@ dmypy.json
 .idea/
 
 # Ignore file txt and csv
+database/*
 database/*.txt
 database/*.csv
+
+# VScode
+.vscode/*
