@@ -24,4 +24,4 @@ Per ogni data prevista (non inclusa nel file "./database/exception_dates_list.tx
 
 
 ## Miglioramenti
-Per suggerimenti e miglioramenti nel codice potete aprire un issue o potete diventare dei contributors sottomettendo delle PR
+Per suggerimenti e miglioramenti nel codice potete aprire un issue o potete diventare dei contributors sottomettendo delle PR.
